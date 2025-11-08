@@ -1,4 +1,4 @@
-# 📊 ML Feature Configurator
+# 📊 ML Finance Feature Configurator
 
 A comprehensive Streamlit tool for transforming OHLC data into ML-ready feature sets with full control over feature selection, scaling, and parameters.
 
