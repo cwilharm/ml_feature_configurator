@@ -338,59 +338,59 @@ def main():
                     "features": ["Daily Return", "Log Return", "High-Low Return", "Open-Close Return"]
                 },
                 "Moving Averages (SMA)": {
-                    "description": f"Simple Moving Averages für windows: {ma_windows_input}",
+                    "description": f"Simple Moving Averages for windows: {ma_windows_input}",
                     "features": [f"SMA_{w}" for w in ma_windows]
                 },
                 "Moving Averages (EMA)": {
-                    "description": f"Exponential Moving Averages für windows: {ma_windows_input}",
+                    "description": f"Exponential Moving Averages for windows: {ma_windows_input}",
                     "features": [f"EMA_{w}" for w in ma_windows]
                 },
                 "Moving Averages (WMA)": {
-                    "description": "Weighted Moving Averages - linear gewichtete Durchschnitte",
+                    "description": "Weighted Moving Averages - linear weighted averages",
                     "features": ["WMA"]
                 },
                 "Hull Moving Average (HMA)": {
-                    "description": "Hull Moving Average - schnellster und glattester MA",
+                    "description": "Hull Moving Average - fastest and smoothest MA",
                     "features": ["HMA"]
                 },
                 "Volatility": {
-                    "description": "Rolling Std, ATR - misst Preisschwankung und Marktrisiko",
+                    "description": "Rolling Std, ATR - measures price fluctuations and market risk",
                     "features": ["Volatility", "ATR"]
                 },
                 "Momentum": {
-                    "description": f"Momentum und ROC für windows: {momentum_windows_input}",
+                    "description": f"Momentum and ROC for windows: {momentum_windows_input}",
                     "features": ["Momentum", "ROC"]
                 },
                 "RSI": {
-                    "description": "Relative Strength Index (14, 21) - überkauft/überverkauft Indikator",
+                    "description": "Relative Strength Index (14, 21) - overbought/oversold indicator",
                     "features": ["RSI_14", "RSI_21"]
                 },
                 "Stochastic Oscillator": {
-                    "description": "Stochastic %K und %D - Momentum Oszillator",
+                    "description": "Stochastic %K and %D - momentum oscillator",
                     "features": ["Stoch_%K", "Stoch_%D"]
                 },
                 "Williams %R": {
-                    "description": "Williams %R (14) - Momentum Indikator für überkauft/überverkauft",
+                    "description": "Williams %R (14) - momentum indicator for overbought/oversold",
                     "features": ["Williams_%R_14"]
                 },
                 "CCI": {
-                    "description": "Commodity Channel Index (20) - misst Abweichung vom Durchschnitt",
+                    "description": "Commodity Channel Index (20) - measures deviation from average",
                     "features": ["CCI_20"]
                 },
                 "CMO": {
-                    "description": "Chande Momentum Oscillator (14) - Momentum Stärke",
+                    "description": "Chande Momentum Oscillator (14) - momentum strength",
                     "features": ["CMO_14"]
                 },
                 "MACD": {
-                    "description": "MACD (12,26,9) - Trend-Following Momentum Indikator",
+                    "description": "MACD (12,26,9) - Trend-Following Momentum Indicator",
                     "features": ["MACD", "MACD_Signal", "MACD_Hist"]
                 },
                 "Bollinger Bands": {
-                    "description": "Bollinger Bands (20,2) mit %B und Bandwidth",
+                    "description": "Bollinger Bands (20,2) with %B and Bandwidth",
                     "features": ["BB_Upper", "BB_Middle", "BB_Lower", "BB_%B", "BB_Bandwidth"]
                 },
                 "Keltner Channel": {
-                    "description": "Keltner Channel (20,10,2) - ATR-basierte Volatilitätsbänder",
+                    "description": "Keltner Channel (20,10,2) - ATR-based volatility bands",
                     "features": ["KC_Upper", "KC_Middle", "KC_Lower"]
                 },
                 "Candlestick Features": {
@@ -398,39 +398,39 @@ def main():
                     "features": ["Body", "Upper_Shadow", "Lower_Shadow", "Body/Range", "Direction"]
                 },
                 "Ichimoku Cloud": {
-                    "description": "Ichimoku (9,26,52) - Tenkan, Kijun, Senkou Spans ohne Future Bias",
+                    "description": "Ichimoku (9,26,52) - Tenkan, Kijun, Senkou Spans without Future Bias",
                     "features": ["Ichimoku_Tenkan", "Ichimoku_Kijun", "Senkou_A", "Senkou_B"]
                 },
                 "ADX & DMI": {
-                    "description": "ADX (14) und +DI/-DI - Trend Stärke und Richtung",
+                    "description": "ADX (14) and +DI/-DI - Trend strength and direction",
                     "features": ["ADX", "+DI", "-DI"]
                 },
                 "Parabolic SAR": {
-                    "description": "Parabolic SAR (0.02, 0.2) - Stop and Reverse Punkte",
+                    "description": "Parabolic SAR (0.02, 0.2) - Stop and Reverse Points",
                     "features": ["PSAR"]
                 },
                 "SuperTrend": {
-                    "description": "SuperTrend (10,3) - ATR-basierter Trend Indikator",
+                    "description": "SuperTrend (10,3) - ATR-based trend indicator",
                     "features": ["SuperTrend", "SuperTrend_Direction"]
                 },
                 "Awesome Oscillator": {
-                    "description": "Awesome Oscillator (5,34) - Midprice-basierter Momentum",
+                    "description": "Awesome Oscillator (5,34) - Midprice-based momentum",
                     "features": ["AO"]
                 },
                 "Volume Features": {
-                    "description": "OBV, VWAP, MFI, Volume Change und SMA",
+                    "description": "OBV, VWAP, MFI, Volume Change and SMA",
                     "features": ["OBV", "VWAP", "MFI", "Volume_Change"]
                 },
                 "Statistical Features": {
-                    "description": f"Rolling Mean/Median/Std/Skewness/Kurtosis/Z-Score für windows: {stat_windows_input}",
+                    "description": f"Rolling Mean/Median/Std/Skewness/Kurtosis/Z-Score for windows: {stat_windows_input}",
                     "features": ["Rolling_Mean", "Rolling_Std", "Z-Score", "Skewness", "Kurtosis"]
                 },
                 "Time Features": {
-                    "description": "Day of Week/Month, Week, Month, Quarter mit cyclical encoding",
+                    "description": "Day of Week/Month, Week, Month, Quarter with cyclical encoding",
                     "features": ["DayOfWeek", "DayOfMonth", "Month", "Quarter", "sin/cos encoding"]
                 },
                 "Cumulative Returns": {
-                    "description": f"Cumulative Returns für windows: {stat_windows_input}",
+                    "description": f"Cumulative Returns for windows: {stat_windows_input}",
                     "features": ["Cumulative_Return"]
                 },
                 "MA Crossovers": {
