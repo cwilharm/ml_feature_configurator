@@ -429,6 +429,8 @@ Feel free to extend this tool with:
 - Custom Feature Combinations
 - Export Formats (Parquet, Excel, etc.)
 
+Feel also free to contact me constantinwilharm@gmail.com!
+
 ## 📄 License
 
 Open Source - Use freely for your ML projects!
