@@ -6,7 +6,8 @@ synthetic feature generation, and target variable creation.
 
 Version: 1.1.0
 """
-
+import os
+os.environ["STREAMLIT_SERVER_FILEWATCHER_TYPE"] = "none"
 import streamlit as st
 import pandas as pd
 import numpy as np
