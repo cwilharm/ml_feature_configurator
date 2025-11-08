@@ -41,7 +41,7 @@ init_session_state()
 
 # ========== MAIN FUNCTION ==========
 def main():
-    st.title("📊 ML Feature Generator")
+    st.title("📊 ML Finance Feature Generator")
     st.markdown("Transform your OHLC data into ML-ready features with full control!")
 
     # ========== AUTO-CHECK EXISTING DATA ==========
