@@ -30,7 +30,7 @@ st.set_page_config(
     layout=APP_CONFIG['layout'],
     menu_items={
         'About': APP_CONFIG['about_text'],
-        'Documentation': 'https://github.com/cwilharm/ml_feature_configurator/blob/6b47b22618e615aaff26564f6196475713ed24af/README.md'
+        'Get help': 'https://github.com/cwilharm/ml_feature_configurator/blob/6b47b22618e615aaff26564f6196475713ed24af/README.md'
     }
 )
 
