@@ -605,7 +605,10 @@ def main():
                         st.session_state.step_6_completed = True
 
                         st.success(f"✅ Features generated successfully!")
-                        st.info(f"📊 Total features: {feature_df.shape[1]} | Rows: {feature_df.shape[0]} | Dropped {rows_dropped} rows with NaN")
+                        st.info(f"📊 Total features: {feature_df.shape[1]} | Rows: {feature_df.shape[0]}")
+
+                        if rows_dropped > 0:
+                            st.warning("⚠️ Some rows were dropped due to NaN values from rolling calculations. Consider adjusting window sizes if nescessary.")
 
                         # Show feature summary
                         st.subheader("Generated Features Summary")
