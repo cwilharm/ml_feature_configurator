@@ -24,12 +24,12 @@ from charts import create_data_overview_charts, create_feature_overview_charts, 
 
 # ========== PAGE CONFIG ==========
 st.set_page_config(
-   page_title=APP_CONFIG['page_title'],
-   page_icon=APP_CONFIG['page_icon'],
-   layout=APP_CONFIG['layout'],
-   menu_items={
-      'About': APP_CONFIG['about_text']
-   }
+    page_title=APP_CONFIG['page_title'],
+    page_icon=APP_CONFIG['page_icon'],
+    layout=APP_CONFIG['layout'],
+    menu_items={
+        'About': APP_CONFIG['about_text']
+    }
 )
 
 
@@ -605,10 +605,7 @@ def main():
                         st.session_state.step_6_completed = True
 
                         st.success(f"✅ Features generated successfully!")
-                        st.info(f"📊 Total features: {feature_df.shape[1]} | Rows: {feature_df.shape[0]} | Dropped {rows_dropped} rows with NaN.")
-
-                        if rows_dropped > 0:
-                            st.info("⚠️ Some rows were dropped due to NaN values after feature calculation. This is expected for features that require a look-back window. Consider adjusting your window lengths if too many rows are lost.")
+                        st.info(f"📊 Total features: {feature_df.shape[1]} | Rows: {feature_df.shape[0]} | Dropped {rows_dropped} rows with NaN")
 
                         # Show feature summary
                         st.subheader("Generated Features Summary")
@@ -632,289 +629,13 @@ def main():
                         with st.expander("📊 Feature Analysis Charts", expanded=True):
                             create_feature_overview_charts(feature_df)
 
-            st.markdown("Next after that: Create synthetic features (advanced) and target variable (optional)")
+            st.markdown("Next after that: Create target variable (optional) and synthetic features (advanced)")
 
             st.markdown("---")
 
-            # ========== STEP 7: SYNTHETIC FEATURES ==========
-            if st.session_state.feature_df is not None and st.session_state.step_6_completed:
-                st.header("7️⃣ Synthetic Features (Advanced)")
-                st.markdown("**Synthetic features** automatically combine existing features - kann ML Performance signifikant verbessern durch non-lineare Relationships")
-
-                # Get current feature_df
-                current_df = st.session_state.feature_df
-
-                # Feature selection for synthetic generation
-                st.subheader("Select Base Features")
-                st.markdown("Choose which features to use as base for synthetic feature generation (too many = explosion!)")
-
-                available_features = current_df.select_dtypes(include=[np.number]).columns.tolist()
-
-                # Smart defaults: select key features
-                default_features = [col for col in available_features if any(
-                    key in col for key in ['Close', 'SMA', 'EMA', 'RSI', 'MACD', 'Volume']
-                )][:15]  # Limit to 15
-
-                selected_base_features = st.multiselect(
-                    "Select features for synthetic generation",
-                    options=available_features,
-                    default=default_features if default_features else available_features[:10],
-                    help="Wähle 5-20 Features - zu viele führen zu Feature-Explosion!"
-                )
-
-                # Synthetic feature categories
-                st.subheader("Select Synthetic Feature Types")
-
-                col1, col2, col3 = st.columns(3)
-
-                # Initialize variables
-                poly_degree = 2
-                max_interactions = 20
-                lag_periods = [1, 2, 3, 5, 10]
-                rolling_windows = [3, 5, 10]
-                diff_periods = [1, 2, 5]
-                n_bins = 5
-
-                with col1:
-                    use_polynomial = st.checkbox(
-                        "Polynomial Features",
-                        value=False,
-                        help="Polynomial combinations (A², A*B, B²) - Degree 2 oder 3"
-                    )
-                    if use_polynomial:
-                        poly_degree = st.slider("Polynomial Degree", 2, 3, 2,
-                            help="Degree 2: quadratic | Degree 3: cubic (mehr features, langsamer)")
-
-                    use_interactions = st.checkbox(
-                        "Feature Interactions",
-                        value=False,
-                        help="Feature interactions (multiplication, division, addition, subtraction)"
-                    )
-                    if use_interactions:
-                        max_interactions = st.slider("Max Interaction Pairs", 10, 100, 20)
-
-                    use_lag = st.checkbox(
-                        "Lag Features",
-                        value=False,
-                        help="Time-shifted features (lag 1, 2, 3, 5, 10)"
-                    )
-                    if use_lag:
-                        lag_periods_input = st.text_input("Lag Periods (comma-separated)", value="1,2,3,5,10")
-                        lag_periods = [int(x.strip()) for x in lag_periods_input.split(',')]
-
-                with col2:
-                    use_rolling_stats = st.checkbox(
-                        "Rolling Statistics",
-                        value=False,
-                        help="Apply rolling mean/std/min/max auf features"
-                    )
-                    if use_rolling_stats:
-                        rolling_windows_input = st.text_input("Rolling Windows", value="3,5,10")
-                        rolling_windows = [int(x.strip()) for x in rolling_windows_input.split(',')]
-
-                    use_diff = st.checkbox(
-                        "Difference Features",
-                        value=False,
-                        help="Generate difference und percentage change features"
-                    )
-                    if use_diff:
-                        diff_periods_input = st.text_input("Diff Periods", value="1,2,5")
-                        diff_periods = [int(x.strip()) for x in diff_periods_input.split(',')]
-
-                    use_ratio = st.checkbox(
-                        "Ratio to Close",
-                        value=False,
-                        help="Create ratios of all features to Close price"
-                    )
-
-                with col3:
-                    use_math_transforms = st.checkbox(
-                        "Mathematical Transforms",
-                        value=False,
-                        help="Log, Sqrt, Square, Cube, Inverse transformations"
-                    )
-
-                    use_cumulative = st.checkbox(
-                        "Cumulative Features",
-                        value=False,
-                        help="Cumulative sum and product"
-                    )
-
-                    use_binning = st.checkbox(
-                        "Binning Features",
-                        value=False,
-                        help="Create binned/categorical versions (quantile-based)"
-                    )
-                    if use_binning:
-                        n_bins = st.slider("Number of Bins", 3, 10, 5)
-
-                st.markdown("**Advanced**: Genetic algorithms automatically develop complex mathematical feature combinations (30 seconds to 2 minutes depending on settings):")
-
-                # gplearn Section
-                use_gplearn = st.checkbox(
-                    "Genetic Programming Features (with gplearn)",
-                    value=False,
-                    help="Use genetic algorithms to evolve new features from mathematical combinations"
-                )
-            
-
-                if use_gplearn:
-                    col_gp1, col_gp2, col_gp3 = st.columns(3)
-                    with col_gp1:
-                        gp_n_components = st.slider(
-                            "Number of GP Features",
-                            5, 50, 10,
-                            help="Wie viele evolved Features? 10=Standard, mehr=langsamer"
-                        )
-                    with col_gp2:
-                        gp_generations = st.slider(
-                            "Generations",
-                            10, 50, 20,
-                            help="Evolution-Runden: mehr=bessere Features aber langsamer (20=optimal)"
-                        )
-                    with col_gp3:
-                        gp_population = st.slider(
-                            "Population Size",
-                            500, 2000, 1000,
-                            step=100,
-                            help="Größe des genetischen Pools - größer=mehr Diversity aber langsamer (1000=optimal)"
-                        )
-
-                if st.button("🧬 Generate Synthetic Features", type="primary"):
-                    if not selected_base_features:
-                        st.error("❌ Please select at least one base feature!")
-                    else:
-                        with st.spinner("🔬 Generating synthetic features... This may take a moment."):
-
-                            # Backup feature_df before adding synthetic features
-                            st.session_state.feature_df_backup = current_df.copy()
-
-                            # Initialize synthetic feature engineering
-                            sfe = SyntheticFeatureEngineering(current_df)
-
-                            # Apply selected synthetic feature types
-                            if use_polynomial:
-                                sfe.add_polynomial_features(degree=poly_degree, selected_features=selected_base_features)
-
-                            if use_interactions:
-                                sfe.add_feature_interactions(selected_features=selected_base_features, max_interactions=max_interactions)
-
-                            if use_lag:
-                                sfe.add_lag_features(selected_features=selected_base_features, lags=lag_periods)
-
-                            if use_rolling_stats:
-                                sfe.add_rolling_statistics_on_features(selected_features=selected_base_features, windows=rolling_windows)
-
-                            if use_diff:
-                                sfe.add_diff_features(selected_features=selected_base_features, periods=diff_periods)
-
-                            if use_ratio:
-                                sfe.add_ratio_features(base_features=selected_base_features)
-
-                            if use_math_transforms:
-                                sfe.add_mathematical_transforms(selected_features=selected_base_features)
-
-                            if use_cumulative:
-                                sfe.add_cumulative_features(selected_features=selected_base_features)
-
-                            if use_binning:
-                                sfe.add_binning_features(selected_features=selected_base_features, bins=n_bins)
-
-                            # Apply gplearn if selected
-                            if use_gplearn:
-                                sfe.add_gplearn_features(
-                                    selected_features=selected_base_features,
-                                    n_components=gp_n_components,
-                                    generations=gp_generations,
-                                    population_size=gp_population
-                                )
-
-                            # Get synthetic features dataframe
-                            synthetic_df = sfe.get_dataframe()
-
-                            # Smart NaN handling for synthetic features
-                            original_shape = synthetic_df.shape
-
-                            # Step 1: Drop rows where OHLC data is missing (critical)
-                            ohlc_cols = ['Open', 'High', 'Low', 'Close']
-                            synthetic_df = synthetic_df.dropna(subset=ohlc_cols)
-
-                            # Step 2: Forward-fill feature columns
-                            feature_cols = [col for col in synthetic_df.columns if col not in ohlc_cols + ['Volume']]
-                            if feature_cols:
-                                synthetic_df[feature_cols] = synthetic_df[feature_cols].ffill()
-
-                            # Step 3: Backward-fill remaining NaNs
-                            if feature_cols:
-                                synthetic_df[feature_cols] = synthetic_df[feature_cols].bfill()
-
-                            # Step 4: Drop rows with >50% NaNs
-                            threshold = int(len(synthetic_df.columns) * 0.5)
-                            synthetic_df = synthetic_df.dropna(thresh=threshold)
-
-                            # Update session state
-                            st.session_state.feature_df = synthetic_df
-                            st.session_state.step_6_5_completed = True  # Mark Step 6.5 as completed
-
-                            # Calculate new features added
-                            new_features_count = synthetic_df.shape[1] - current_df.shape[1]
-                            rows_removed = original_shape[0] - synthetic_df.shape[0]
-
-                            st.success(f"✅ Synthetic features generated successfully!")
-                            st.info(f"**Added {new_features_count} new synthetic features!**")
-                            st.info(f"Original shape: {original_shape}, After NaN handling: {synthetic_df.shape}")
-                            st.info(f"Rows removed: {rows_removed} ({rows_removed/original_shape[0]*100:.1f}%)")
-                            st.info(f"Total features now: {synthetic_df.shape[1]}")
-
-                            # Show what was added - NO NESTED EXPANDERS
-                            st.markdown("### 🔍 Newly Added Synthetic Features")
-                            new_cols = [col for col in synthetic_df.columns if col not in current_df.columns]
-
-                            if new_cols:
-                                col1, col2 = st.columns(2)
-                                half = len(new_cols) // 2
-
-                                with col1:
-                                    for col in new_cols[:half]:
-                                        st.text(f"  • {col}")
-
-                                with col2:
-                                    for col in new_cols[half:]:
-                                        st.text(f"  • {col}")
-                            else:
-                                st.write("No new features added (possibly all removed due to NaN)")
-
-                # Show results in separate expanders (outside the button click)
-                if 'synthetic_features_generated' not in st.session_state:
-                    st.session_state.synthetic_features_generated = False
-
-                # After generation, show preview and stats
-                if st.session_state.feature_df is not None and st.session_state.feature_df.shape[1] > len(current_df.columns):
-                    with st.expander("📋 Preview Current Features"):
-                        st.dataframe(st.session_state.feature_df.head(10))
-
-                    with st.expander("📊 Synthetic Feature Analysis", expanded=False):
-                        create_feature_overview_charts(st.session_state.feature_df)
-
-                    with st.expander("📈 Current Statistics"):
-                        st.dataframe(st.session_state.feature_df.describe())
-
-                # Undo Synthetic Features button
-                if st.session_state.step_6_5_completed and st.session_state.feature_df_backup is not None:
-                    col1, col2 = st.columns([3, 1])
-                    with col2:
-                        if st.button("↩️ Undo Synthetic Features"):
-                            st.session_state.feature_df = st.session_state.feature_df_backup.copy()
-                            st.session_state.step_6_5_completed = False
-                            st.success("✅ Synthetic features removed - back to base features!")
-                            st.rerun()
-
-                st.markdown("---")
-
-
-            # ========== STEP 8: TARGET VARIABLE GENERATION ==========
+            # ========== STEP 7: TARGET VARIABLE GENERATION ==========
             if st.session_state.feature_df is not None:
-                st.header("8️⃣ Target Variable (Optional)")
+                st.header("7️⃣ Target Variable (Optional)")
 
                 st.info("""
                 **Target Variable** is what your ML model is supposed to predict.
@@ -1244,23 +965,300 @@ def main():
                                 st.dataframe(target_df[['Close', 'target']].tail(20))
 
 
-            # ========== FEATURE-TARGET ANALYSIS CHARTS ==========
-            if st.session_state.feature_df is not None and 'target' in st.session_state.feature_df.columns:
-                with st.expander("📊 Feature-Target Analysis Charts", expanded=True):
-                    st.info("""
-                    **Feature-Target Analysis** helps you understand which features are most predictive of your target variable.
-                    - **Correlation Chart**: Shows which features have the strongest relationship with your target
-                    - **Distribution Analysis**: Visualizes how feature values differ across target values
-                    - **Scatter Plots**: Detailed view of top features vs target with trend lines
-                    """)
-                    create_feature_target_analysis_charts(st.session_state.feature_df, target_col='target', top_n=10)
+            # ========== STEP 8: SYNTHETIC FEATURES ==========
+            if st.session_state.feature_df is not None and st.session_state.step_6_completed:
+                st.header("8️⃣ Synthetic Features (Advanced)")
+                st.markdown("**Synthetic features** automatically combine existing features - can significantly improve ML Performance through non-linear relationships")
+
+                # Get current feature_df
+                current_df = st.session_state.feature_df
+
+                # Feature selection for synthetic generation
+                st.subheader("Select Base Features")
+                st.markdown("Choose which features to use as base for synthetic feature generation (too many = explosion!)")
+
+                available_features = current_df.select_dtypes(include=[np.number]).columns.tolist()
+
+                # Smart defaults: select key features
+                default_features = [col for col in available_features if any(
+                    key in col for key in ['Close', 'SMA', 'EMA', 'RSI', 'MACD', 'Volume']
+                )][:15]  # Limit to 15
+
+                selected_base_features = st.multiselect(
+                    "Select features for synthetic generation",
+                    options=available_features,
+                    default=default_features if default_features else available_features[:10],
+                    help="Wähle 5-20 Features - zu viele führen zu Feature-Explosion!"
+                )
+
+                # Synthetic feature categories
+                st.subheader("Select Synthetic Feature Types")
+
+                col1, col2, col3 = st.columns(3)
+
+                # Initialize variables
+                poly_degree = 2
+                max_interactions = 20
+                lag_periods = [1, 2, 3, 5, 10]
+                rolling_windows = [3, 5, 10]
+                diff_periods = [1, 2, 5]
+                n_bins = 5
+
+                with col1:
+                    use_polynomial = st.checkbox(
+                        "Polynomial Features",
+                        value=False,
+                        help="Polynomial combinations (A², A*B, B²) - Degree 2 oder 3"
+                    )
+                    if use_polynomial:
+                        poly_degree = st.slider("Polynomial Degree", 2, 3, 2,
+                            help="Degree 2: quadratic | Degree 3: cubic (mehr features, langsamer)")
+
+                    use_interactions = st.checkbox(
+                        "Feature Interactions",
+                        value=False,
+                        help="Feature interactions (multiplication, division, addition, subtraction)"
+                    )
+                    if use_interactions:
+                        max_interactions = st.slider("Max Interaction Pairs", 10, 100, 20)
+
+                    use_lag = st.checkbox(
+                        "Lag Features",
+                        value=False,
+                        help="Time-shifted features (lag 1, 2, 3, 5, 10)"
+                    )
+                    if use_lag:
+                        lag_periods_input = st.text_input("Lag Periods (comma-separated)", value="1,2,3,5,10")
+                        lag_periods = [int(x.strip()) for x in lag_periods_input.split(',')]
+
+                with col2:
+                    use_rolling_stats = st.checkbox(
+                        "Rolling Statistics",
+                        value=False,
+                        help="Apply rolling mean/std/min/max auf features"
+                    )
+                    if use_rolling_stats:
+                        rolling_windows_input = st.text_input("Rolling Windows", value="3,5,10")
+                        rolling_windows = [int(x.strip()) for x in rolling_windows_input.split(',')]
+
+                    use_diff = st.checkbox(
+                        "Difference Features",
+                        value=False,
+                        help="Generate difference und percentage change features"
+                    )
+                    if use_diff:
+                        diff_periods_input = st.text_input("Diff Periods", value="1,2,5")
+                        diff_periods = [int(x.strip()) for x in diff_periods_input.split(',')]
+
+                    use_ratio = st.checkbox(
+                        "Ratio to Close",
+                        value=False,
+                        help="Create ratios of all features to Close price"
+                    )
+
+                with col3:
+                    use_math_transforms = st.checkbox(
+                        "Mathematical Transforms",
+                        value=False,
+                        help="Log, Sqrt, Square, Cube, Inverse transformations"
+                    )
+
+                    use_cumulative = st.checkbox(
+                        "Cumulative Features",
+                        value=False,
+                        help="Cumulative sum and product"
+                    )
+
+                    use_binning = st.checkbox(
+                        "Binning Features",
+                        value=False,
+                        help="Create binned/categorical versions (quantile-based)"
+                    )
+                    if use_binning:
+                        n_bins = st.slider("Number of Bins", 3, 10, 5)
+
+                st.markdown("**Advanced**: Genetic algorithms automatically develop complex mathematical feature combinations (30 seconds to 2 minutes depending on settings):")
+
+                # gplearn Section
+                use_gplearn = st.checkbox(
+                    "Genetic Programming Features (with gplearn)",
+                    value=False,
+                    help="Use genetic algorithms to evolve new features from mathematical combinations"
+                )
+            
+
+                if use_gplearn:
+                    col_gp1, col_gp2, col_gp3 = st.columns(3)
+                    with col_gp1:
+                        gp_n_components = st.slider(
+                            "Number of GP Features",
+                            5, 50, 10,
+                            help="Wie viele evolved Features? 10=Standard, mehr=langsamer"
+                        )
+                    with col_gp2:
+                        gp_generations = st.slider(
+                            "Generations",
+                            10, 50, 20,
+                            help="Evolution-Runden: mehr=bessere Features aber langsamer (20=optimal)"
+                        )
+                    with col_gp3:
+                        gp_population = st.slider(
+                            "Population Size",
+                            500, 2000, 1000,
+                            step=100,
+                            help="Größe des genetischen Pools - größer=mehr Diversity aber langsamer (1000=optimal)"
+                        )
+
+                if st.button("🧬 Generate Synthetic Features", type="primary"):
+                    if not selected_base_features:
+                        st.error("❌ Please select at least one base feature!")
+                    else:
+                        with st.spinner("🔬 Generating synthetic features... This may take a moment."):
+
+                            # Backup feature_df before adding synthetic features
+                            st.session_state.feature_df_backup = current_df.copy()
+
+                            # Initialize synthetic feature engineering
+                            sfe = SyntheticFeatureEngineering(current_df)
+
+                            # Apply selected synthetic feature types
+                            if use_polynomial:
+                                sfe.add_polynomial_features(degree=poly_degree, selected_features=selected_base_features)
+
+                            if use_interactions:
+                                sfe.add_feature_interactions(selected_features=selected_base_features, max_interactions=max_interactions)
+
+                            if use_lag:
+                                sfe.add_lag_features(selected_features=selected_base_features, lags=lag_periods)
+
+                            if use_rolling_stats:
+                                sfe.add_rolling_statistics_on_features(selected_features=selected_base_features, windows=rolling_windows)
+
+                            if use_diff:
+                                sfe.add_diff_features(selected_features=selected_base_features, periods=diff_periods)
+
+                            if use_ratio:
+                                sfe.add_ratio_features(base_features=selected_base_features)
+
+                            if use_math_transforms:
+                                sfe.add_mathematical_transforms(selected_features=selected_base_features)
+
+                            if use_cumulative:
+                                sfe.add_cumulative_features(selected_features=selected_base_features)
+
+                            if use_binning:
+                                sfe.add_binning_features(selected_features=selected_base_features, bins=n_bins)
+
+                            # Apply gplearn if selected
+                            if use_gplearn:
+                                sfe.add_gplearn_features(
+                                    selected_features=selected_base_features,
+                                    n_components=gp_n_components,
+                                    generations=gp_generations,
+                                    population_size=gp_population
+                                )
+                                # Show mode (supervised vs unsupervised)
+                                if hasattr(sfe, 'gplearn_mode'):
+                                    if 'SUPERVISED' in sfe.gplearn_mode:
+                                        st.success(f"✅ gplearn used SUPERVISED mode with target variable for better features!")
+                                    else:
+                                        st.info(f"ℹ️ gplearn used UNSUPERVISED mode (no target found). Generate target first for better results!")
+
+                            # Get synthetic features dataframe
+                            synthetic_df = sfe.get_dataframe()
+
+                            # Smart NaN handling for synthetic features
+                            original_shape = synthetic_df.shape
+
+                            # Step 1: Drop rows where OHLC data is missing (critical)
+                            ohlc_cols = ['Open', 'High', 'Low', 'Close']
+                            synthetic_df = synthetic_df.dropna(subset=ohlc_cols)
+
+                            # Step 2: Forward-fill feature columns
+                            feature_cols = [col for col in synthetic_df.columns if col not in ohlc_cols + ['Volume']]
+                            if feature_cols:
+                                synthetic_df[feature_cols] = synthetic_df[feature_cols].ffill()
+
+                            # Step 3: Backward-fill remaining NaNs
+                            if feature_cols:
+                                synthetic_df[feature_cols] = synthetic_df[feature_cols].bfill()
+
+                            # Step 4: Drop rows with >50% NaNs
+                            threshold = int(len(synthetic_df.columns) * 0.5)
+                            synthetic_df = synthetic_df.dropna(thresh=threshold)
+
+                            # Update session state
+                            st.session_state.feature_df = synthetic_df
+                            st.session_state.step_6_5_completed = True  # Mark Step 6.5 as completed
+
+                            # Calculate new features added
+                            new_features_count = synthetic_df.shape[1] - current_df.shape[1]
+                            rows_removed = original_shape[0] - synthetic_df.shape[0]
+
+                            st.success(f"✅ Synthetic features generated successfully!")
+                            st.info(f"Added {new_features_count} new synthetic features, Original Features: {current_df.shape[1]} | New Features: {new_features_count} | Total: {synthetic_df.shape[1]} ")
+
+                            # Show what was added - NO NESTED EXPANDERS
+                            st.markdown("### 🔍 Newly Added Synthetic Features")
+                            new_cols = [col for col in synthetic_df.columns if col not in current_df.columns]
+
+                            if new_cols:
+                                col1, col2 = st.columns(2)
+                                half = len(new_cols) // 2
+
+                                with col1:
+                                    for col in new_cols[:half]:
+                                        st.text(f"  • {col}")
+
+                                with col2:
+                                    for col in new_cols[half:]:
+                                        st.text(f"  • {col}")
+                            else:
+                                st.write("No new features added (possibly all removed due to NaN)")
+
+                # Show results in separate expanders (outside the button click)
+                if 'synthetic_features_generated' not in st.session_state:
+                    st.session_state.synthetic_features_generated = False
+
+                # After generation, show preview and stats
+                if st.session_state.feature_df is not None and st.session_state.feature_df.shape[1] > len(current_df.columns):
+                    with st.expander("📋 Preview Current Features"):
+                        st.dataframe(st.session_state.feature_df.head(10))
+
+                    with st.expander("📊 Synthetic Feature Analysis", expanded=False):
+                        create_feature_overview_charts(st.session_state.feature_df)
+
+                    with st.expander("📈 Current Statistics"):
+                        st.dataframe(st.session_state.feature_df.describe())
+
+                # Undo Synthetic Features button
+                if st.session_state.step_6_5_completed and st.session_state.feature_df_backup is not None:
+                    col1, col2 = st.columns([3, 1])
+                    with col2:
+                        if st.button("↩️ Undo Synthetic Features"):
+                            st.session_state.feature_df = st.session_state.feature_df_backup.copy()
+                            st.session_state.step_6_5_completed = False
+                            st.success("✅ Synthetic features removed - back to base features!")
+                            st.rerun()
 
                 st.markdown("---")
+
 
             # ========== STEP 9: DOWNLOAD ==========
             if st.session_state.feature_df is not None:
                 st.header("9️⃣ Download Features")
                 st.session_state.step_7_completed = True
+
+                            # ========== FEATURE-TARGET ANALYSIS CHARTS ==========
+                if st.session_state.feature_df is not None and 'target' in st.session_state.feature_df.columns:
+                    with st.expander("📊 Feature-Target Analysis Charts", expanded=False):
+                        st.info("""
+                    **Feature-Target Analysis** helps you understand which features are most predictive of your target variable.
+                    - **Correlation Chart**: Shows which features have the strongest relationship with your target
+                    - **Distribution Analysis**: Visualizes how feature values differ across target values
+                    - **Scatter Plots**: Detailed view of top features vs target with trend lines
+                    """)
+                        create_feature_target_analysis_charts(st.session_state.feature_df, target_col='target', top_n=10)
 
                 feature_df = st.session_state.feature_df
 
@@ -1268,7 +1266,6 @@ def main():
 
                 with col1:
                     st.metric("Total Features", feature_df.shape[1])
-
 
                 with col2:
                     st.metric("Total Rows", feature_df.shape[0])

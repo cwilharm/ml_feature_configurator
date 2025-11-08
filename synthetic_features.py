@@ -250,9 +250,25 @@ class SyntheticFeatureEngineering:
         if len(X_clean) < 10:  # Need minimum data for evolution
             return self
 
-        # Create a dummy target (we use unsupervised feature generation)
-        # Using variance of features as proxy target for evolution
-        y_dummy = X_clean.std(axis=1).values
+        # Check if target variable exists - use it for supervised feature generation
+        if 'target' in self.df.columns:
+            # SUPERVISED: Use actual target for better feature evolution
+            y_clean = self.df.loc[X_clean.index, 'target'].values
+
+            # Remove rows where target is NaN
+            valid_mask = ~np.isnan(y_clean)
+            X_clean = X_clean[valid_mask]
+            y_clean = y_clean[valid_mask]
+
+            if len(X_clean) < 10:
+                return self
+
+            y_target = y_clean
+            mode = "SUPERVISED (using target variable)"
+        else:
+            # UNSUPERVISED: Create a dummy target using variance of features
+            y_target = X_clean.std(axis=1).values
+            mode = "UNSUPERVISED (no target found)"
 
         try:
             # Initialize SymbolicTransformer
@@ -278,8 +294,11 @@ class SyntheticFeatureEngineering:
                 n_jobs=1
             )
 
-            # Fit and transform
-            gp_features = gp.fit_transform(X_clean.values, y_dummy)
+            # Fit and transform with target (supervised if available)
+            gp_features = gp.fit_transform(X_clean.values, y_target)
+
+            # Store the mode info for user feedback
+            self.gplearn_mode = mode
 
             # Add evolved features back to dataframe
             for i in range(gp_features.shape[1]):
