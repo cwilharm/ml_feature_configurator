@@ -28,7 +28,8 @@ st.set_page_config(
     page_icon=APP_CONFIG['page_icon'],
     layout=APP_CONFIG['layout'],
     menu_items={
-        'About': APP_CONFIG['about_text']
+        'About': APP_CONFIG['about_text'],
+        'Documentation': 'https://github.com/cwilharm/ml_feature_configurator/blob/6b47b22618e615aaff26564f6196475713ed24af/README.md'
     }
 )
 
@@ -49,7 +50,7 @@ def main():
 
     if st.session_state.mapped_df is not None:
         st.session_state.step_2_completed = True
-        st.session_state.step_4_completed = True  # Auto-complete optional config
+        st.session_state.step_4_completed = True
 
     if st.session_state.feature_df is not None:
         st.session_state.step_6_completed = True
@@ -68,7 +69,6 @@ def main():
     **4️⃣ Window Configuration** *(Optional)*
 
     **5️⃣ Feature Selection**
-    - Choose from 24+ categories
 
     **6️⃣ Generate Features**
 
@@ -92,7 +92,7 @@ def main():
 
     # ========== README LINK ==========
     st.sidebar.markdown("### 📚 Documentation")
-    readme_url = "https://github.com/yourusername/TFT/blob/main/README_FEATURE_CONFIGURATOR.md"
+    readme_url = "https://github.com/cwilharm/ml_feature_configurator/blob/6b47b22618e615aaff26564f6196475713ed24af/README.md"
     st.sidebar.markdown(f"[📖 Read Full Documentation]({readme_url})")
 
     st.sidebar.markdown("---")
