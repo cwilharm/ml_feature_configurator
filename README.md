@@ -2,6 +2,8 @@
 
 A comprehensive Streamlit tool for transforming OHLC data into ML-ready feature sets with full control over feature selection, scaling, and parameters.
 
+Find a demo on https://ml-feature-generator.streamlit.app/
+
 ## 🚀 Features
 
 ### 1. CSV Upload & Column Mapping
