@@ -258,7 +258,7 @@ pip install -r requirements.txt
 
 ```bash
 # Start the Streamlit app
-streamlit run feature_configurator.py
+streamlit run main.py
 ```
 
 ## 📝 Workflow

@@ -605,7 +605,10 @@ def main():
                         st.session_state.step_6_completed = True
 
                         st.success(f"✅ Features generated successfully!")
-                        st.info(f"📊 Total features: {feature_df.shape[1]} | Rows: {feature_df.shape[0]} | Dropped {rows_dropped} rows with NaN")
+                        st.info(f"📊 Total features: {feature_df.shape[1]} | Rows: {feature_df.shape[0]} | Dropped {rows_dropped} rows with NaN.")
+
+                        if rows_dropped > 0:
+                            st.info("⚠️ Some rows were dropped due to NaN values after feature calculation. This is expected for features that require a look-back window. Consider adjusting your window lengths if too many rows are lost.")
 
                         # Show feature summary
                         st.subheader("Generated Features Summary")
@@ -1243,7 +1246,7 @@ def main():
 
             # ========== FEATURE-TARGET ANALYSIS CHARTS ==========
             if st.session_state.feature_df is not None and 'target' in st.session_state.feature_df.columns:
-                with st.expander("📊 Feature-Target Analysis Charts", expanded=False):
+                with st.expander("📊 Feature-Target Analysis Charts", expanded=True):
                     st.info("""
                     **Feature-Target Analysis** helps you understand which features are most predictive of your target variable.
                     - **Correlation Chart**: Shows which features have the strongest relationship with your target
@@ -1265,6 +1268,7 @@ def main():
 
                 with col1:
                     st.metric("Total Features", feature_df.shape[1])
+
 
                 with col2:
                     st.metric("Total Rows", feature_df.shape[0])

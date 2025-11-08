@@ -398,27 +398,64 @@ class FeatureEngineering:
 
         # Basic Upper and Lower Bands
         hl_avg = (self.high + self.low) / 2
-        upper_band = hl_avg + (multiplier * atr)
-        lower_band = hl_avg - (multiplier * atr)
+        basic_upper = hl_avg + (multiplier * atr)
+        basic_lower = hl_avg - (multiplier * atr)
 
-        # SuperTrend calculation
+        # Initialize final bands
+        final_upper = pd.Series(index=self.df.index, dtype=float)
+        final_lower = pd.Series(index=self.df.index, dtype=float)
         supertrend = pd.Series(index=self.df.index, dtype=float)
         direction = pd.Series(index=self.df.index, dtype=int)
 
+        # First valid index (after ATR calculation)
+        first_valid = period - 1
+
         for i in range(len(self.df)):
-            if i == 0:
-                supertrend.iloc[i] = lower_band.iloc[i]
+            if i < first_valid:
+                # Fill with NaN until ATR is calculated
+                final_upper.iloc[i] = np.nan
+                final_lower.iloc[i] = np.nan
+                supertrend.iloc[i] = np.nan
+                direction.iloc[i] = 1
+            elif i == first_valid:
+                # Initialize at first valid point
+                final_upper.iloc[i] = basic_upper.iloc[i]
+                final_lower.iloc[i] = basic_lower.iloc[i]
+                supertrend.iloc[i] = basic_lower.iloc[i]
                 direction.iloc[i] = 1
             else:
-                if self.close.iloc[i] > supertrend.iloc[i-1]:
-                    supertrend.iloc[i] = lower_band.iloc[i]
-                    direction.iloc[i] = 1
-                elif self.close.iloc[i] < supertrend.iloc[i-1]:
-                    supertrend.iloc[i] = upper_band.iloc[i]
-                    direction.iloc[i] = -1
+                # Update final bands based on previous values
+                if pd.notna(basic_upper.iloc[i]) and pd.notna(final_upper.iloc[i-1]):
+                    final_upper.iloc[i] = basic_upper.iloc[i] if basic_upper.iloc[i] < final_upper.iloc[i-1] or self.close.iloc[i-1] > final_upper.iloc[i-1] else final_upper.iloc[i-1]
                 else:
-                    supertrend.iloc[i] = supertrend.iloc[i-1]
-                    direction.iloc[i] = direction.iloc[i-1]
+                    final_upper.iloc[i] = basic_upper.iloc[i]
+
+                if pd.notna(basic_lower.iloc[i]) and pd.notna(final_lower.iloc[i-1]):
+                    final_lower.iloc[i] = basic_lower.iloc[i] if basic_lower.iloc[i] > final_lower.iloc[i-1] or self.close.iloc[i-1] < final_lower.iloc[i-1] else final_lower.iloc[i-1]
+                else:
+                    final_lower.iloc[i] = basic_lower.iloc[i]
+
+                # Determine SuperTrend value and direction
+                if pd.notna(supertrend.iloc[i-1]):
+                    if supertrend.iloc[i-1] == final_upper.iloc[i-1]:
+                        # Was in downtrend
+                        if self.close.iloc[i] <= final_upper.iloc[i]:
+                            supertrend.iloc[i] = final_upper.iloc[i]
+                            direction.iloc[i] = -1
+                        else:
+                            supertrend.iloc[i] = final_lower.iloc[i]
+                            direction.iloc[i] = 1
+                    else:
+                        # Was in uptrend
+                        if self.close.iloc[i] >= final_lower.iloc[i]:
+                            supertrend.iloc[i] = final_lower.iloc[i]
+                            direction.iloc[i] = 1
+                        else:
+                            supertrend.iloc[i] = final_upper.iloc[i]
+                            direction.iloc[i] = -1
+                else:
+                    supertrend.iloc[i] = final_lower.iloc[i]
+                    direction.iloc[i] = 1
 
         self.df[f'SuperTrend_{period}_{multiplier}'] = supertrend
         self.df[f'SuperTrend_Direction_{period}_{multiplier}'] = direction
